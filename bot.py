@@ -1,85 +1,128 @@
 import logging
-import asyncio
-import sys
-from flask import Flask
-import threading
+import random
+import json
+import os
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-# ست کردن event loop برای ترد اصلی
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
+# ==================== تنظیمات ====================
+TOKEN = os.environ.get("8857616173:AAH9GFlfd8GLHjkoUf3elLCO9u05XA-EPvE")  # توکن ربات رو توی Render به عنوان Environment Variable بذار
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")  # اگه نداری خالی بمونه
+PORT = int(os.environ.get("PORT", 10000))
+RENDER_URL = os.environ.get("https://bot-clean-xqxg.onrender.com")  # مثلاً https://your-bot.onrender.com
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+# ==================== بارگذاری فحش‌های آماده ====================
+with open("insults.json", "r", encoding="utf-8") as f:
+    insults_db = json.load(f)
 
-BOT_TOKEN = "8857616173:AAH9GFlfd8GLHjkoUf3elLCO9u05XA-EPvE"
+# ==================== Gemini (اگر کلید داشت) ====================
+use_gemini = bool(GEMINI_API_KEY)
+if use_gemini:
+    import google.generativeai as genai
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+# ==================== توابع کمکی ====================
+def generate_ai_insult(name: str, style: str = "خلاقانه و خنده‌دار و اصلاً توهین‌آمیز نباشه") -> str:
+    """با Gemini یه فحش شخصی‌سازی‌شده می‌سازه"""
+    if not use_gemini:
+        return None
+    prompt = f"""
+    یه جمله طنزآمیز و کاملاً دوستانه برای {name} بنویس که به شوخی مسخرش کنه.
+    سبک: {style}
+    توهین واقعی نباشه، فقط یه شوخی بامزه.
+    حداکثر دو جمله.
+    مستقیماً خود جمله رو بگو، بدون هیچ توضیح اضافه.
+    """
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        logging.error(f"Gemini error: {e}")
+        return None
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    keyboard = [
-        [InlineKeyboardButton("🔵 گیت‌هاب", url="https://github.com"), InlineKeyboardButton("📢 تلگرام", url="https://t.me/telegram")],
-        [InlineKeyboardButton("ℹ️ راهنما", callback_data="help"), InlineKeyboardButton("👋 سلام", callback_data="hello")],
-        [InlineKeyboardButton("🎲 عدد تصادفی", callback_data="random"), InlineKeyboardButton("📊 آمار", callback_data="stats")]
-    ]
-    await update.message.reply_html(f"👋 سلام {user.mention_html()}!\n\n🐍 ربات پایتونی روی Render!\n☁️ اجرای ۲۴/۷ رایگان\n\n🦜 هر چی بگی رو اکو می‌کنم!", reply_markup=InlineKeyboardMarkup(keyboard))
+def get_random_template(templates: list, name: str = "") -> str:
+    """یه قالب تصادفی انتخاب می‌کنه و اسم رو جایگزین می‌کنه"""
+    text = random.choice(templates)
+    return text.replace("{name}", name) if name else text
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("📚 /start - منو\n/help - راهنما\n/about - درباره", parse_mode="HTML")
+# ==================== دستورات ربات ====================
+async def fohsh(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """فحش معمولی یا شخصی‌سازی‌شده"""
+    target = None
+    if context.args:
+        target = context.args[0]  # @username
 
-async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🤖 ربات پایتونی روی Render ☁️\nاجرای ۲۴/۷ | رایگان", parse_mode="HTML")
+    insult = None
+    if target and use_gemini:
+        insult = generate_ai_insult(target, "فحش کاملاً خنده‌دار و غیرتوهین‌آمیز")
+    if not insult:
+        insult = get_random_template(insults_db["single"], name=target if target else "کاربر")
+    await update.message.reply_text(insult)
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    user = update.effective_user.first_name
-    keyboard = [[InlineKeyboardButton("🔄 اکو دوباره", callback_data=f"echo:{text}")], [InlineKeyboardButton("🏠 منو", callback_data="menu")]]
-    await update.message.reply_text(f"🦜 اکو از {user}:\n\n{text}", reply_markup=InlineKeyboardMarkup(keyboard))
+async def tamjid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """تعریف در قالب فحش"""
+    target = "کاربر"
+    if context.args:
+        target = context.args[0]
+    insult = None
+    if target != "کاربر" and use_gemini:
+        insult = generate_ai_insult(target, "تعریف کن ولی طوری که انگار داری مسخره‌اش می‌کنی. خیلی بامزه.")
+    if not insult:
+        insult = get_random_template(insults_db["tamjid"], name=target)
+    await update.message.reply_text(insult)
 
-async def echo_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_sticker(update.message.sticker.file_id)
+async def dava(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """جنگ دو نفر و فحش دادن به هر دو"""
+    if len(context.args) < 2:
+        await update.message.reply_text("دو تا یوزرنیم رو وارد کن. مثال:\n/dava @Ali @Reza")
+        return
+    user1, user2 = context.args[0], context.args[1]
+    intro = random.choice(insults_db["dava_intro"]).format(user1=user1, user2=user2)
+    insult1 = None
+    insult2 = None
+    if use_gemini:
+        insult1 = generate_ai_insult(user1, "فحش خنده‌دار در قالب یک مبارزه فرضی")
+        insult2 = generate_ai_insult(user2, "فحش خنده‌دار در قالب یک مبارزه فرضی")
+    if not insult1:
+        insult1 = get_random_template(insults_db["single"], name=user1)
+    if not insult2:
+        insult2 = get_random_template(insults_db["single"], name=user2)
+    await update.message.reply_text(
+        f"{intro}\n\n"
+        f"👈 {user1}: {insult1}\n"
+        f"👉 {user2}: {insult2}\n\n"
+        f"🤝 نتیجه: هر دوتون در حد هم هستید."
+    )
 
-async def echo_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    photo = update.message.photo[-1].file_id
-    await update.message.reply_photo(photo, caption=update.message.caption or "📸 عکس تو!")
+async def latife(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """لطیفه‌ای که آخرش یه فحش خلاقانه داره"""
+    joke = get_random_template(insults_db["latife"])
+    await update.message.reply_text(joke)
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-    user = query.from_user.first_name
-    if data == "help": await query.edit_message_text(f"ℹ️ {user}، کافیه پیام بدی تا اکو کنم!")
-    elif data == "hello": await query.edit_message_text(f"👋 سلام {user}! ✨")
-    elif data == "random":
-        import random; await query.edit_message_text(f"🎲 {random.randint(1,100)}")
-    elif data == "stats": await query.edit_message_text(f"📊 پایتون روی Render ☁️\n👤 {user}")
-    elif data.startswith("echo:"): await query.edit_message_text(f"🔄 اکو:\n{data.split(':',1)[1]}")
-    elif data == "menu": await query.edit_message_text("🏠 /start رو بزن")
+# ==================== اجرای ربات با webhook ====================
+def main():
+    logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-async def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("about", about))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
-    app.add_handler(MessageHandler(filters.Sticker.ALL, echo_sticker))
-    app.add_handler(MessageHandler(filters.PHOTO, echo_photo))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    
-    await app.initialize()
-    await app.start()
-    logger.info("🤖 ربات شروع شد!")
-    await app.updater.start_polling()
+    if not TOKEN or not RENDER_URL:
+        raise ValueError("لطفاً TOKEN و RENDER_URL رو توی Environment Variables تنظیم کن.")
 
-def run_flask():
-    flask_app = Flask(__name__)
-    @flask_app.route('/')
-    def home():
-        return "<h1>🐍☁️ ربات آنلاینه!</h1>"
-    flask_app.run(host='0.0.0.0', port=10000)
+    app = Application.builder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("fohsh", fohsh))
+    app.add_handler(CommandHandler("tamjid", tamjid))
+    app.add_handler(CommandHandler("dava", dava))
+    app.add_handler(CommandHandler("latife", latife))
+
+    # تنظیم webhook
+    webhook_url = f"{RENDER_URL}/webhook"
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path="webhook",
+        webhook_url=webhook_url
+    )
+    print(f"✅ ربات روی پورت {PORT} با webhook روشن شد...")
 
 if __name__ == "__main__":
-    threading.Thread(target=run_flask, daemon=True).start()
-    loop.run_until_complete(main())
-    loop.run_forever()
+    main()
