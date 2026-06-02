@@ -67,24 +67,36 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🌐 گیت‌هاب", url="https://github.com/aghoali/bot-clean")],
         [InlineKeyboardButton("📢 تلگرام", url="https://t.me/Mew_albot")],
+        [InlineKeyboardButton("🤖 چت با هوش مصنوعی", callback_data="ai_info")],
+        [InlineKeyboardButton("🔥 فحش بده", callback_data="fohsh_info")],
+        [InlineKeyboardButton("😈 تمجید مسخره", callback_data="tamjid_info")],
+        [InlineKeyboardButton("⚔️ دعوا", callback_data="dava_info")],
+        [InlineKeyboardButton("🤣 لطیفه", callback_data="latife_info")],
         [InlineKeyboardButton("❓ راهنما", callback_data="help")],
-        [InlineKeyboardButton("👋 سلام", callback_data="hello")],
-        [InlineKeyboardButton("🎲 عدد تصادفی", callback_data="random")],
-        [InlineKeyboardButton("📊 آمار", callback_data="stats")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("سلام! به ربات Mew_albot خوش اومدی. 😼", reply_markup=reply_markup)
+    await update.message.reply_text("🔥 به ربات همه‌کاره خوش اومدی! 😼\nچیکار برات انجام بدم؟", reply_markup=reply_markup)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("راهنما:\n/start\n/help\n/about\n/echo [متن]\n/fohsh\n/fohsh @user\n/tamjid @user\n/dava @user1 @user2\n/latife")
+    await update.message.reply_text(
+        "🔥 راهنمای ربات همه‌کاره:\n\n"
+        "/ai [سوال] - چت با هوش مصنوعی\n"
+        "/fohsh - فحش تصادفی\n"
+        "/fohsh @user - فحش به یه نفر\n"
+        "/tamjid @user - تعریف مسخره‌آمیز\n"
+        "/dava @user1 @user2 - دعوای دو نفر\n"
+        "/latife - لطیفه فحش‌دار\n"
+        "/about - درباره ربات\n"
+        "/start - منوی اصلی"
+    )
 
 async def about(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("ربات Mew_albot – ساخته‌شده با عشق و پایتون. 😸")
-
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_text = update.message.text
-    keyboard = [[InlineKeyboardButton("🔄 اکو دوباره", callback_data=f"echo_{user_text}")]]
-    await update.message.reply_text(user_text, reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(
+        "🤖 ربات همه‌کاره Mew_albot\n"
+        "نسخه ۲.۰\n"
+        "🔥 قابلیت‌ها: چت با هوش مصنوعی، فحش خلاقانه، لطیفه و کلی سرگرمی\n"
+        "ساخته‌شده با پایتون و عشق 😸"
+    )
 
 async def sticker_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_sticker(update.message.sticker.file_id)
@@ -98,20 +110,84 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data == "help":
-        await query.edit_message_text("راهنما:\n/start\n/help\n/about\n/echo\n/fohsh\n/tamjid\n/dava\n/latife")
-    elif data == "hello":
-        await query.edit_message_text("سلام به تو! 😸")
-    elif data == "random":
-        await query.edit_message_text(f"عدد تصادفی: {random.randint(1, 100)}")
-    elif data == "stats":
-        await query.edit_message_text("آمار ربات:\nزنده است. فحش می‌دهد. شاد است. 🤖")
-    elif data.startswith("echo_"):
-        text = data[5:]
-        await query.edit_message_text(f"اکو: {text}")
-    elif data == "menu":
-        await start(update, context)
+        await query.edit_message_text(
+            "🔥 راهنمای ربات همه‌کاره:\n\n"
+            "/ai [سوال] - چت با هوش مصنوعی\n"
+            "/fohsh - فحش تصادفی\n"
+            "/fohsh @user - فحش به یه نفر\n"
+            "/tamjid @user - تعریف مسخره‌آمیز\n"
+            "/dava @user1 @user2 - دعوای دو نفر\n"
+            "/latife - لطیفه فحش‌دار\n"
+            "/about - درباره ربات\n"
+            "/start - منوی اصلی"
+        )
+    elif data == "ai_info":
+        await query.edit_message_text(
+            "🤖 چت با هوش مصنوعی:\n\n"
+            "از دستور /ai استفاده کن و سوالت رو بپرس!\n"
+            "مثال:\n"
+            "/ai چطوری پولدار شم؟\n"
+            "/ai یه جوک بگو\n"
+            "/ai برنامه‌نویسی رو از کجا شروع کنم؟\n"
+            "/ai چرا آسمون آبیه؟"
+        )
+    elif data == "fohsh_info":
+        await query.edit_message_text(
+            "🔥 فحش خلاقانه:\n\n"
+            "/fohsh - یه فحش باحال تصادفی\n"
+            "/fohsh @user - فحش شخصی‌سازی‌شده\n"
+            "/dava @user1 @user2 - دعوای دو نفر"
+        )
+    elif data == "tamjid_info":
+        await query.edit_message_text(
+            "😈 تمجید مسخره:\n\n"
+            "/tamjid @user - تعریف در قالب فحش\n"
+            "مثلاً: /tamjid @Ali"
+        )
+    elif data == "dava_info":
+        await query.edit_message_text(
+            "⚔️ دعوای دو نفر:\n\n"
+            "/dava @user1 @user2\n"
+            "مثلاً: /dava @Ali @Reza\n"
+            "ربات هر دوتاشون رو مسخره می‌کنه!"
+        )
+    elif data == "latife_info":
+        await query.edit_message_text(
+            "🤣 لطیفه فحش‌دار:\n\n"
+            "/latife - یه لطیفه که آخرش یه فحش باحال داره!"
+        )
 
-# ==================== دستورات فحش جدید ====================
+# ==================== چت با هوش مصنوعی ====================
+async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_text = " ".join(context.args)
+    if not user_text:
+        await update.message.reply_text(
+            "❓ سوالت رو بعد از دستور بنویس!\n"
+            "مثال:\n"
+            "/ai چرا آسمون آبیه؟\n"
+            "/ai بهترین زبان برنامه‌نویسی چیه؟\n"
+            "/ai یه جوک بگو"
+        )
+        return
+    
+    if not use_gemini:
+        await update.message.reply_text("❌ هوش مصنوعی فعال نیست. ادمین باید کلید Gemini رو توی Render تنظیم کنه.")
+        return
+    
+    thinking_msg = await update.message.reply_text("🤔 بذار فکر کنم...")
+    
+    prompt = f"""
+    یه جواب مفید، مختصر و خودمونی به این سوال بده.
+    اگه سوال طنزآمیز بود، جواب طنزآمیز بده.
+    سوال: {user_text}
+    """
+    try:
+        response = model.generate_content(prompt)
+        await thinking_msg.edit_text(response.text.strip())
+    except Exception as e:
+        await thinking_msg.edit_text(f"❌ خطا در ارتباط با هوش مصنوعی: {e}")
+
+# ==================== دستورات فحش ====================
 async def fohsh(update: Update, context: ContextTypes.DEFAULT_TYPE):
     target = None
     if context.args:
@@ -169,13 +245,14 @@ async def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("about", about))
-    app.add_handler(CommandHandler("echo", echo))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
     app.add_handler(MessageHandler(filters.Sticker.ALL, sticker_handler))
     app.add_handler(MessageHandler(filters.PHOTO, photo_handler))
     app.add_handler(CallbackQueryHandler(button_handler))
 
-    # دستورات فحش جدید
+    # دستورات هوش مصنوعی
+    app.add_handler(CommandHandler("ai", ai_chat))
+
+    # دستورات فحش
     app.add_handler(CommandHandler("fohsh", fohsh))
     app.add_handler(CommandHandler("tamjid", tamjid))
     app.add_handler(CommandHandler("dava", dava))
@@ -186,14 +263,12 @@ async def main():
     flask_thread.daemon = True
     flask_thread.start()
 
-    print("✅ ربات Mew_albot با قابلیت فحش خلاقانه روشن شد...")
+    print("✅ ربات Mew_albot با قابلیت چت هوش مصنوعی و فحش خلاقانه روشن شد...")
     
-    # این روش برای Python 3.14 سازگاره
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
     
-    # ربات رو زنده نگه دار
     try:
         while True:
             await asyncio.sleep(3600)
