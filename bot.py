@@ -21,6 +21,7 @@ def run_flask():
 # ==================== تنظیمات ربات ====================
 BOT_TOKEN = "8857616173:AAH9GFlfd8GLHjkoUf3elLCO9u05XA-EPvE"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
 # ==================== بارگذاری فحش‌های آماده ====================
 try:
     with open("insults.json", "r", encoding="utf-8") as f:
@@ -61,7 +62,7 @@ def get_random_template(templates: list, name: str = "") -> str:
     text = random.choice(templates)
     return text.replace("{name}", name) if name else text
 
-# ==================== دستورات اصلی قبلی ====================
+# ==================== دستورات اصلی ====================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🌐 گیت‌هاب", url="https://github.com/aghoali/bot-clean")],
@@ -180,13 +181,26 @@ async def main():
     app.add_handler(CommandHandler("dava", dava))
     app.add_handler(CommandHandler("latife", latife))
 
-    # اجرای Flask در thread جداگانه برای جلوگیری از خواب
+    # اجرای Flask در thread جداگانه
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
     print("✅ ربات Mew_albot با قابلیت فحش خلاقانه روشن شد...")
-    await app.run_polling()
+    
+    # این روش برای Python 3.14 سازگاره
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    
+    # ربات رو زنده نگه دار
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except (KeyboardInterrupt, SystemExit):
+        await app.updater.stop()
+        await app.stop()
+        await app.shutdown()
 
 if __name__ == "__main__":
     asyncio.run(main())
