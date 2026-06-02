@@ -1,8 +1,15 @@
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+import asyncio
+import sys
 from flask import Flask
 import threading
+
+# ست کردن event loop برای ترد اصلی
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 BOT_TOKEN = "AAH090LSVmMcpbA9hiArXBMUzVl3iUDXIDQ"
 
@@ -50,7 +57,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data.startswith("echo:"): await query.edit_message_text(f"🔄 اکو:\n{data.split(':',1)[1]}")
     elif data == "menu": await query.edit_message_text("🏠 /start رو بزن")
 
-def main():
+async def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
@@ -60,14 +67,19 @@ def main():
     app.add_handler(MessageHandler(filters.PHOTO, echo_photo))
     app.add_handler(CallbackQueryHandler(button_handler))
     
+    await app.initialize()
+    await app.start()
+    logger.info("🤖 ربات شروع شد!")
+    await app.updater.start_polling()
+
+def run_flask():
     flask_app = Flask(__name__)
     @flask_app.route('/')
     def home():
         return "<h1>🐍☁️ ربات آنلاینه!</h1>"
-    threading.Thread(target=lambda: flask_app.run(host='0.0.0.0', port=10000), daemon=True).start()
-    
-    logger.info("🤖 ربات شروع شد!")
-    app.run_polling()
+    flask_app.run(host='0.0.0.0', port=10000)
 
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=run_flask, daemon=True).start()
+    loop.run_until_complete(main())
+    loop.run_forever()
