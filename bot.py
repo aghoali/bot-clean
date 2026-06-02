@@ -11,7 +11,7 @@ asyncio.set_event_loop(loop)
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
-BOT_TOKEN = "8857616173:AAH090LSVmMcpbA9hiArXBMUzVl3iUDXIDQ"
+BOT_TOKEN = "8857616173:AAH9GFlfd8GLHjkoUf3elLCO9u05XA-EPvE"
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
